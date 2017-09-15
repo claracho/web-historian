@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+const http = require('http');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -9,11 +10,12 @@ var _ = require('underscore');
  * customize it in any way you wish.
  */
 
-exports.paths = {
+const paths = {
   siteAssets: path.join(__dirname, '../web/public'),
   archivedSites: path.join(__dirname, '../archives/sites'),
   list: path.join(__dirname, '../archives/sites.txt')
 };
+exports.paths = paths;
 
 // Used for stubbing paths for tests, do not modify
 exports.initialize = function(pathsObj) {
@@ -26,16 +28,68 @@ exports.initialize = function(pathsObj) {
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(callback) {
+  fs.readFile(paths.list, 'utf8', (err, fileContent) => {
+    if (err) {
+      console.log(err);
+    } else {
+      callback(fileContent.split('\n'));
+    }
+  }); 
 };
 
 exports.isUrlInList = function(url, callback) {
+  fs.readFile(paths.list, 'utf8', (err, fileContent) => {
+    if (err) {
+      console.log(err);
+    } else {
+      callback(fileContent.includes(url));
+    }
+  }); 
 };
 
-exports.addUrlToList = function(url, callback) {
+let addUrlToList = function(url, callback) {
+  fs.readFile(paths.list, 'utf8', (err, fileContent) => {
+    if (err) {
+      console.log(err);
+    } else {
+      fs.writeFile(paths.list, fileContent += url + '\n', 'utf8', (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          callback();
+        }
+      });
+    }
+  }); 
 };
+exports.addUrlToList = addUrlToList;
 
 exports.isUrlArchived = function(url, callback) {
+  fs.readFile(paths.archivedSites + '/' + url, (err, fileContent) => {
+    if (err) {
+      console.log(err);
+      callback(false);
+    } else {
+      callback(true);
+    }
+  }); 
 };
 
 exports.downloadUrls = function(urls) {
+  for (let url of urls) {
+    console.log(url);
+    http.get('http://' + url, (response) => {
+      let data = '';
+      response.on('data', (chunk) => {
+        data += chunk;
+      }).on('end', () => {
+        let stream = fs.createWriteStream(paths.archivedSites + '/' + url);
+        stream.write(data.toString());
+        stream.end();
+        addUrlToList(url, () => {});
+      });
+    }).on('error', (err) => {
+      console.log(err);
+    }).end();
+  }
 };
