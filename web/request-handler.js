@@ -11,7 +11,6 @@ let notFoundHandler = (req, res) => {
 };
 
 let getHandler = (req, res) => {
-  let headers = http.headers;
   let fileUrl;
 
   if (req.url.includes('www')) {
@@ -28,8 +27,8 @@ let getHandler = (req, res) => {
       console.log(err);
       notFoundHandler(req, res);
     } else {
-      headers['Content-Type'] = mime.lookup(fileUrl);
-      res.writeHead(200, headers);
+      http.headers['Content-Type'] = mime.lookup(fileUrl);
+      res.writeHead(200, http.headers);
       res.end(data);
     }
   });
@@ -42,15 +41,35 @@ let postHandler = (req, res) => {
   }).on('end', () => {
     data = data.toString();
     let url = data.split('=')[1];
-    archive.isUrlInList(url, (itIs) => {
-      if (!itIs) {
-        archive.addUrlToList(url, () => {
-          res.statusCode = 302;
-          res.end();
+    archive.isUrlArchived(url, (itIs) => {
+      // if url archived, redirect to archived page
+      if (itIs) {
+        fileUrl = archive.paths.archivedSites + '/' + url;
+        fs.readFile(fileUrl, (err, data) => {
+          if (err) {
+            console.log(err);
+          } else {
+            http.headers['Content-Type'] = 'text/html';
+            res.writeHead(302, http.headers);
+            res.end(data);
+          }
         });
       } else {
-        res.statusCode = 302;
-        res.end();
+        // if url not archived, add url to list (archive: if url not in list)
+        archive.addUrlToList(url, () => {
+          fileUrl = archive.paths.siteAssets + '/loading.html';
+          // redirect to loading.html
+          fs.readFile(fileUrl, (err, data) => {
+            if (err) {
+              console.log(err);
+            } else {
+              http.headers['Content-Type'] = mime.lookup(fileUrl);
+              res.writeHead(302, http.headers);
+              res.end(data);
+            }
+          });
+        });
+        
       }
     });
   });

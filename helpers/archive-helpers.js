@@ -12,8 +12,8 @@ const http = require('http');
 
 const paths = {
   siteAssets: path.join(__dirname, '../web/public'),
-  archivedSites: path.join(__dirname, '../archives/sites'),
-  list: path.join(__dirname, '../archives/sites.txt')
+  archivedSites: path.join(__dirname, '../web/archives/sites'),
+  list: path.join(__dirname, '../web/archives/sites.txt')
 };
 exports.paths = paths;
 
@@ -37,7 +37,7 @@ exports.readListOfUrls = function(callback) {
   }); 
 };
 
-exports.isUrlInList = function(url, callback) {
+let isUrlInList = function(url, callback) {
   fs.readFile(paths.list, 'utf8', (err, fileContent) => {
     if (err) {
       console.log(err);
@@ -46,34 +46,45 @@ exports.isUrlInList = function(url, callback) {
     }
   }); 
 };
+exports.isUrlInList = isUrlInList;
 
-let addUrlToList = function(url, callback) {
-  fs.readFile(paths.list, 'utf8', (err, fileContent) => {
-    if (err) {
-      console.log(err);
-    } else {
-      fs.writeFile(paths.list, fileContent += url + '\n', 'utf8', (err) => {
-        if (err) {
-          console.log(err);
-        } else {
-          callback(fileContent.includes(url));
-        }
-      });
-    }
-  }); 
-};
-exports.addUrlToList = addUrlToList;
-
-exports.isUrlArchived = function(url, callback) {
+let isUrlArchived = function(url, callback) {
   fs.readFile(paths.archivedSites + '/' + url, (err, fileContent) => {
     if (err) {
-      console.log(err);
       callback(false);
     } else {
       callback(true);
     }
   }); 
 };
+exports.isUrlArchived = isUrlArchived;
+
+let addUrlToList = function(url, callback) {
+  isUrlInList(url, (itIs) => {
+    if (itIs) {
+      callback(true);
+    } else {
+
+      fs.readFile(paths.list, 'utf8', (err, fileContent) => {
+        if (err) {
+          console.log(err);
+        } else {
+
+          fs.writeFile(paths.list, fileContent += url + '\n', 'utf8', (err) => {
+            if (err) {
+              console.log(err);
+            } else {
+              callback(true);
+            }
+          });
+
+        }
+      });
+
+    }
+  }); 
+};
+exports.addUrlToList = addUrlToList;
 
 exports.downloadUrls = function(urls) {
   for (let url of urls) {

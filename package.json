@@ -19,6 +19,7 @@
   "dependencies": {
     "bluebird": "^3.3.4",
     "cron": "^1.1.0",
+    "jQuery": "^1.7.4",
     "request": "^2.70.0",
     "underscore": "^1.8.3"
   },
