@@ -56,7 +56,7 @@ let addUrlToList = function(url, callback) {
         if (err) {
           console.log(err);
         } else {
-          callback();
+          callback(fileContent.includes(url));
         }
       });
     }
@@ -77,16 +77,15 @@ exports.isUrlArchived = function(url, callback) {
 
 exports.downloadUrls = function(urls) {
   for (let url of urls) {
-    console.log(url);
     http.get('http://' + url, (response) => {
       let data = '';
       response.on('data', (chunk) => {
         data += chunk;
       }).on('end', () => {
-        let stream = fs.createWriteStream(paths.archivedSites + '/' + url);
-        stream.write(data.toString());
-        stream.end();
-        addUrlToList(url, () => {});
+        fs.writeFile(paths.archivedSites + '/' + url, data, (err) => { 
+          if (err) { console.log(err); }
+          addUrlToList(url, () => {}); 
+        });
       });
     }).on('error', (err) => {
       console.log(err);
