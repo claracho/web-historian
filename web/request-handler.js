@@ -3,7 +3,6 @@ const fs = require('fs');
 const mime = require('mime-types'); 
 var archive = require('../helpers/archive-helpers');
 var http = require('./http-helpers');
-const fetcher = require('../workers/htmlfetcher.js');
 // require more modules/folders here!
 
 let notFoundHandler = (req, res) => {
@@ -64,7 +63,6 @@ let postHandler = (req, res) => {
             if (err) {
               console.log(err);
             } else {
-              fetcher.work();
               http.headers['Content-Type'] = mime.lookup(fileUrl);
               res.writeHead(302, http.headers);
               res.end(data);

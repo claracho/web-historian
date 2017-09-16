@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
-const http = require('http');
+const https = require('https');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -92,7 +92,7 @@ exports.downloadUrls = function(urls) {
   for (let url of urls) {
     isUrlArchived(url, (itIs) => {
       if (!itIs) {
-        http.get('http://' + url, (response) => {
+        https.get('https://' + url, (response) => {
           let data = '';
           response.on('data', (chunk) => {
             data += chunk;

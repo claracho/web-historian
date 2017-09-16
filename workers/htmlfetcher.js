@@ -2,8 +2,10 @@
 // that are waiting.
 var archive = require('../helpers/archive-helpers');
 
-exports.work = () => {
+var work = () => {
   archive.readListOfUrls( (urls) => {
     archive.downloadUrls(urls);
   });
 };
+
+work();
