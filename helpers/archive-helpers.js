@@ -32,7 +32,9 @@ exports.readListOfUrls = function(callback) {
     if (err) {
       console.log(err);
     } else {
-      callback(fileContent.split('\n'));
+      let urls = fileContent.split('\n');
+      urls.pop();
+      callback(urls);
     }
   }); 
 };
@@ -88,18 +90,21 @@ exports.addUrlToList = addUrlToList;
 
 exports.downloadUrls = function(urls) {
   for (let url of urls) {
-    http.get('http://' + url, (response) => {
-      let data = '';
-      response.on('data', (chunk) => {
-        data += chunk;
-      }).on('end', () => {
-        fs.writeFile(paths.archivedSites + '/' + url, data, (err) => { 
-          if (err) { console.log(err); }
-          addUrlToList(url, () => {}); 
-        });
-      });
-    }).on('error', (err) => {
-      console.log(err);
-    }).end();
+    isUrlArchived(url, (itIs) => {
+      if (!itIs) {
+        http.get('http://' + url, (response) => {
+          let data = '';
+          response.on('data', (chunk) => {
+            data += chunk;
+          }).on('end', () => {
+            fs.writeFile(paths.archivedSites + '/' + url, data, (err) => { 
+              if (err) { console.log(err); }
+            });
+          });
+        }).on('error', (err) => {
+          console.log(err);
+        }).end();
+      }
+    });
   }
 };
