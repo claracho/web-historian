@@ -2,6 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 const https = require('https');
+var Promise = require('bluebird');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -37,6 +38,21 @@ exports.readListOfUrls = function(callback) {
       callback(urls);
     }
   }); 
+};
+
+// readListOfUrls cannot be promisified, so we need to write long version
+exports.readListOfUrlsAsync = function() {
+  return new Promise((resolve, reject) => {
+    fs.readFile(paths.list, 'utf8', (err, fileContent) => {
+      if (err) {
+        reject(err);
+      } else {
+        let urls = fileContent.split('\n');
+        urls.pop();
+        resolve(urls);
+      }
+    }); 
+  });
 };
 
 let isUrlInList = function(url, callback) {
@@ -108,3 +124,5 @@ exports.downloadUrls = function(urls) {
     });
   }
 };
+
+exports.downloadUrlsAsync = Promise.promisify(exports.downloadUrls);
